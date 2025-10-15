@@ -27,7 +27,6 @@ PROJECT_ID = "langchain-demo-abf48"
 SESSION_ID = "user_session_new"  # This could be a username or a unique ID
 COLLECTION_NAME = "chat_history"
 
-# Initialize Firestore Client
 print("Initializing Firestore Client...")
 client = firestore.Client(project=PROJECT_ID)
 

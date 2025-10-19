@@ -26,7 +26,7 @@ Your purpose is to provide accurate, clear, and well-structured information abou
 Your tone should be professional, informative, and slightly instructional — like a documentation guide or a developer educator.
 """)
 PROJECT_ID = "lanchain-chatbot"
-SESSION_ID = "user_session_new"  
+SESSION_ID = "user_session_1"  
 COLLECTION_NAME = "chat_history"
 print("Initializing Firestore Client...")
 client = firestore.Client(project=PROJECT_ID)

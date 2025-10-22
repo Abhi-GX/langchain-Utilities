@@ -8,7 +8,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 load_dotenv()
 
 # Create a ChatOpenAI model
-model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+model = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite")
+model2= ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
 # Define prompt templates for different feedback types
 positive_feedback_template = ChatPromptTemplate.from_messages(
@@ -48,29 +49,40 @@ escalate_feedback_template = ChatPromptTemplate.from_messages(
 )
 
 # Define the feedback classification template
-classification_template = ChatPromptTemplate.from_messages(
-    [
-        ("system", "You are a helpful assistant."),
-        ("human",
-         "Classify the sentiment of this feedback as positive, negative, neutral, or escalate: {feedback}."),
-    ]
-)
+classification_template = ChatPromptTemplate.from_messages([
+    ("system", """
+You are an assistant that classifies customer feedback into one of the following categories:
+- positive
+- negative
+- neutral
+- escalate
+
+Rules:
+1. If the user asks a question, requests more information, or expresses confusion — classify as "escalate".
+2. If the feedback contains praise, happiness, or satisfaction — classify as "positive".
+3. If the feedback contains complaints, dissatisfaction, or frustration — classify as "negative".
+4. If the feedback is factual or indifferent without strong emotion — classify as "neutral".
+
+Return only the single word: positive, negative, neutral, or escalate.
+"""),
+    ("human", "Classify the sentiment of this feedback: {feedback}")
+])
 
 # Define the runnable branches for handling feedback
 branches = RunnableBranch(
     (
         lambda x: "positive" in x,
-        positive_feedback_template | model | StrOutputParser()  # Positive feedback chain
+        positive_feedback_template | model2 | StrOutputParser()  # Positive feedback chain
     ),
     (
         lambda x: "negative" in x,
-        negative_feedback_template | model | StrOutputParser()  # Negative feedback chain
+        negative_feedback_template | model2 | StrOutputParser()  # Negative feedback chain
     ),
     (
         lambda x: "neutral" in x,
-        neutral_feedback_template | model | StrOutputParser()  # Neutral feedback chain
+        neutral_feedback_template | model2 | StrOutputParser()  # Neutral feedback chain
     ),
-    escalate_feedback_template | model | StrOutputParser()
+    escalate_feedback_template | model2 | StrOutputParser()
 )
 
 # Create the classification chain
@@ -85,8 +97,9 @@ chain = classification_chain | branches
 # Neutral review - "The product is okay. It works as expected but nothing exceptional."
 # Default - "I'm not sure about the product yet. Can you tell me more about its features and benefits?"
 
-review = "The product is terrible. It broke after just one use and the quality is very poor."
+review = "The product is excellent. I really enjoyed using it and found it very helpful."
 result = chain.invoke({"feedback": review})
+# result=classification_chain.invoke({"feedback": review})
 
 # Output the result
 print(result)
